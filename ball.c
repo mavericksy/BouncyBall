@@ -70,26 +70,26 @@ void step(struct Circle *circle) {
 }
 
 void FillTrajectory(SDL_Surface *surface,
-                    struct Circle trajectory[TRAJ_LENGTH],
-                    int current_index) {
+                    struct Circle trajectory[TRAJ_LENGTH]) {
   //
-  for (int32_t i = 0; i < current_index; i++) {
+  for (int32_t i = 0; i < TRAJ_LENGTH; i++) {
     trajectory[i].radius = TRAJ_WIDTH * (double) i / 100.0;
     FillCircle(surface, trajectory[i], COLOUR_DARK);
   }
 }
 
 void UpdateTrajectory(struct Circle trajectory[TRAJ_LENGTH],
-                      struct Circle circle, int32_t current_index) {
+                      struct Circle circle) {
   //
-  if (current_index >= TRAJ_LENGTH) {
-    // shift left by 1 and append latest circle to end
-    for (int32_t i = 0; i < current_index; i++)
-      trajectory[i] = trajectory[i+1];
-    trajectory[current_index] = circle;
-  } else {
-    trajectory[current_index] = circle;
-  }
+  // shift left by 1 and append latest circle to end
+  struct Circle traj_shifted[TRAJ_LENGTH];
+  for (int32_t i = 1; i < TRAJ_LENGTH; i++)
+      traj_shifted[i-1] = trajectory[i];
+  //
+  for(int32_t i = 0;i<TRAJ_LENGTH;i++)
+    trajectory[i] = traj_shifted[i];
+  //
+  trajectory[TRAJ_LENGTH-1] = circle;
 }
 
 int main() {
@@ -114,7 +114,6 @@ int main() {
   //
   struct Circle circle = (struct Circle) {OFFSET_COORD_X, OFFSET_COORD_Y, 30, 25, 25};
   struct Circle circles[TRAJ_LENGTH] = {{0}};
-  int32_t current_index = 0;
   //
   int32_t run = 1;
   while (run) {
@@ -127,13 +126,11 @@ int main() {
     //
     SDL_FillRect(surface, &back, COLOUR_LIGHT);
     //
-    FillTrajectory(surface, circles, current_index);
+    FillTrajectory(surface, circles);
     FillCircle(surface, circle, COLOUR_DARK);
     step(&circle);
     //
-    UpdateTrajectory(circles, circle, current_index);
-    if (current_index < TRAJ_LENGTH)
-      ++current_index;
+    UpdateTrajectory(circles, circle);
     //
     SDL_UpdateWindowSurface(window);
     SDL_Delay(20);
